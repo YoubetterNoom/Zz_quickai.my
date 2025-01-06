@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.png" type="image/x-icon">
+    <title>BlastAI - Trading Agent</title>
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background: black;
+            font-family: 'Courier New', monospace;
+            color: #13e26d;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .background-text {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.1;
+            overflow: hidden;
+            white-space: nowrap;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.2;
+            color: #13e26d;
+            pointer-events: none;
+            animation: scrollText 120s linear infinite;
+        }
+
+        @keyframes scrollText {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto 1fr 1fr;
+            gap: 20px;
+            width: 95%;
+            max-width: 1400px;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+            margin-top: 60px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            background: #13e26d26;
+            border: 1px solid #13e26d;
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #13e26d, transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        .ai-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #0f0;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .panel {
+            background: #13e26d20;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 10px;
+            padding: 1px;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        .panel-title {
+            font-size: 0.9em;
+            color: #ffffff;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #13e26d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-value {
+            font-size: 1.5em;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            margin: 10px 0;
+        }
+
+        .system-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            color: #fff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: #fff;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .ai-logs {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 10px;
+            height: 60px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding-left: 10px;
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        /* New styles for additional panels */
+        .wallet-panel, .system-panel {
+            background: #13e26d27;
+            border: 1px solid #ffffff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calculation-line {
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            margin: 5px 0;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        .blink-text {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .processing-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #ffffff;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 30px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-brand img {
+            height: 30px;
+            width: auto;
+        }
+
+        .ca-text {
+            color: #13e26d;
+            font-size: 1.2rem;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 2.5rem;
+            margin-right: 1rem;
+            align-items: center;
+        }
+
+        .navbar-links a {
+            color: #13e26d;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            position: relative;
+        }
+
+        .navbar-links a:hover {
+            color: #fff;
+            text-shadow: 0 0 10px #13e26d,
+                         0 0 20px #13e26d,
+                         0 0 30px #13e26d;
+        }
+
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .deploy-agent {
+            background: #13e26d21;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .deploy-agent:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        .deploy-agent .plus {
+            font-size: 48px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 10px;
+        }
+
+        .deploy-agent .text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1001;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 10% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            color: #13e26d;
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .setup-form {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .connect-button, .deploy-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .connect-button:hover, .deploy-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .deployment-status {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .status-line {
+            margin: 5px 0;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease, height 0.3s ease;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+
+        .status-line.active {
+            opacity: 1;
+            height: 20px;
+        }
+
+        .status-line::before {
+            content: '> ';
+            color: #00ff00;
+        }
+
+        .status-error {
+            color: #ff4444;
+        }
+
+        .loading-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            bottom: 0;
+        }
+
+        .loading-header {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .loading-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #00ffaa);
+            transition: width 0.5s ease;
+        }
+
+        .time-remaining {
+            text-align: right;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .status-line {
+            margin: 5px 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status-error {
+            color: #ff4444;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles-container"></div>
+    <nav class="navbar">
+        <a href="#" class="navbar-brand">
+            <img src="static/picture/logo.png" alt="V7 AI Logo">
+            BlastAI
+        </a>
+        <div class="ca-text">CA: TBD</div>
+        <div class="navbar-links">
+            <a href='whitepaper.html'>Whitepaper</a>
+            <a href="https://x.com/BlastAI_my" target="_blank">Twitter</a>
+        </div>
+    </nav>
+    <div class="background-text"></div>
+    <div class="grid-overlay"></div>
+    <div class="dashboard">
+        <div class="header">
+            <h1>AI Trading Agent</h1>
+            <div class="ai-status">
+                <div class="status-dot"></div>
+                System Online
+            </div>
+        </div>
+
+        <!-- Token Data Panels -->
+        <div class="panel">
+            <div class="panel-title">
+                Market Cap Progress
+                <span class="target">Target: 1M</span>
+            </div>
+            <div class="data-value" id="marketCap">Loading...</div>
+            <div class="progress-bar">
+                <div class="progress" id="mcapProgress"></div>
+            </div>
+            <div class="ai-logs" id="mcapLogs">
+                <div class="log-entry">Initializing market cap tracking...</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Holders Analysis</div>
+            <div class="data-value" id="holders">Loading...</div>
+            <div class="progress-bar">
+                <div class="progress" style="width: 60%"></div>
+            </div>
+            <div class="ai-logs" id="holdersLogs">
+                <div class="log-entry">Monitoring holder distribution...</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Liquidity Status</div>
+            <div class="data-value" id="liquidityPool">Loading...</div>
+            <div class="progress-bar">
+                <div class="progress" style="width: 45%"></div>
+            </div>
+            <div class="ai-logs" id="liquidityLogs">
+                <div class="log-entry">Analyzing liquidity depth...</div>
+            </div>
+        </div>
+
+        <!-- System Stats Panels -->
+        <div class="panel">
+            <div class="panel-title">AI System Resources</div>
+            <div class="system-stats">
+                <div class="stat">
+                    <div class="stat-label">Neural Processing</div>
+                    <div class="stat-value">87%</div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 87%"></div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Pattern Recognition</div>
+                    <div class="stat-value">64%</div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 64%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Network Analysis</div>
+            <div class="system-stats">
+                <div class="stat">
+                    <div class="stat-label">Market Sentiment</div>
+                    <div class="stat-value">76%</div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 76%"></div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Trade Success Rate</div>
+                    <div class="stat-value">92%</div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 92%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Volume Analysis</div>
+            <div class="data-value" id="volume">Loading...</div>
+            <div class="progress-bar">
+                <div class="progress" style="width: 30%"></div>
+            </div>
+            <div class="ai-logs" id="volumeLogs">
+                <div class="log-entry">Monitoring trading volume...</div>
+            </div>
+        </div>
+
+        <!-- New Wallet Information Panel -->
+        <div class="wallet-panel">
+            <h3><span class="processing-indicator"></span>Wallet Analytics</h3>
+            <div id="wallet-stats">
+            </div>
+        </div>
+
+        <!-- System Calculations Panel -->
+        <div class="system-panel">
+            <h3><span class="processing-indicator"></span>System Metrics</h3>
+            <div id="system-calculations">
+                <div class="calculation-line">Network Latency: <span id="network-latency">0</span>ms</div>
+                <div class="calculation-line">Block Height: <span id="block-height">0</span></div>
+                <div class="calculation-line">TPS: <span id="current-tps">0</span></div>
+                <div class="calculation-line">Market Analysis: <span id="market-status" class="blink-text">Processing...</span></div>
+            </div>
+        </div>
+
+        <a href="https://gitbook.io" target="_blank" class="deploy-agent">
+            <div class="plus">+</div>
+            <div class="text">Deploy your TRADING AGENT</div>
+        </a>
+    </div>
+
+    <div id="setupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Trading Agent Setup</h2>
+            <div id="walletSection">
+                <p>Connect your Phantom wallet to continue</p>
+                <button class="connect-button" onclick="connectWallet()">Connect Phantom Wallet</button>
+            </div>
+            <form id="setupForm" class="setup-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="agentName">Agent Name:</label>
+                        <input type="text" id="agentName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="solBalance">Balance of SOL:</label>
+                        <input type="number" id="solBalance" step="0.1" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="roiTarget">ROI Target (%):</label>
+                        <input type="number" id="roiTarget" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxLoss">Max Loss (%):</label>
+                        <input type="number" id="maxLoss" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tradingInterval">Trading Interval (minutes):</label>
+                        <input type="number" id="tradingInterval" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxPositions">Max Concurrent Positions:</label>
+                        <input type="number" id="maxPositions" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Risk Level:</label>
+                    <div class="checkbox-group">
+                        <label><input type="radio" name="riskLevel" value="low" required> Low</label>
+                        <label><input type="radio" name="riskLevel" value="medium" required> Medium</label>
+                        <label><input type="radio" name="riskLevel" value="high" required> High</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Trading Platform:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="raydium"> Raydium</label>
+                        <label><input type="checkbox" id="pumpfun"> Pumpfun</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Advanced Settings:</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="autoCompound"> Auto Compound Profits</label>
+                        <label><input type="checkbox" id="stopLoss"> Use Stop Loss</label>
+                        <label><input type="checkbox" id="takeProfit"> Use Take Profit</label>
+                    </div>
+                </div>
+                <button type="submit" class="deploy-button">Deploy Agent</button>
+            </form>
+            <div id="deploymentStatus" class="deployment-status">
+                <div class="loading-container">
+                    <div class="loading-header">Estimated time: 3 minutes</div>
+                    <div class="loading-bar">
+                        <div class="loading-progress" id="loadingProgress"></div>
+                    </div>
+                </div>
+                <div class="status-line">Initializing setup...</div>
+                <div class="status-line">Booting AI trading engine...</div>
+                <div class="status-line">Establishing secure connection...</div>
+                <div class="status-line">Loading configuration files...</div>
+                <div class="status-line">Verifying system dependencies...</div>
+                <div class="status-line">Synchronizing server clocks...</div>
+                <div class="status-line">Activating AI core modules...</div>
+                <div class="status-line">Performing security handshake...</div>
+                <div class="status-line">Validating encryption keys...</div>
+                <div class="status-line">Fetching user profile data...</div>
+                <div class="status-line">Connecting to market data streams...</div>
+                <div class="status-line">Synchronizing with SDDatabase...</div>
+                <div class="status-line">Fetching historical trade data...</div>
+                <div class="status-line">Verifying database integrity...</div>
+                <div class="status-line">Optimizing data pipelines...</div>
+                <div class="status-line">Calibrating AI learning models...</div>
+                <div class="status-line">Querying exchange APIs...</div>
+                <div class="status-line">Establishing real-time feeds...</div>
+                <div class="status-line">Updating asset price indexes...</div>
+                <div class="status-line">Loading trading strategies...</div>
+                <div class="status-line">Connecting to liquidity providers...</div>
+                <div class="status-line">Establishing websocket connections...</div>
+                <div class="status-line">Testing server latency...</div>
+                <div class="status-line">Initiating SSL/TLS encryption...</div>
+                <div class="status-line">Mapping API endpoints...</div>
+                <div class="status-line">Synchronizing network protocols...</div>
+                <div class="status-line">Loading AI inference engines...</div>
+                <div class="status-line">Building predictive models...</div>
+                <div class="status-line">Tuning hyperparameters...</div>
+                <div class="status-line">Optimizing neural networks...</div>
+                <div class="status-line">Validating risk parameters...</div>
+                <div class="status-line">Simulating test trades...</div>
+                <div class="status-line">Calibrating sentiment analysis...</div>
+                <div class="status-line">Compiling trade signals...</div>
+                <div class="status-line">Assessing market volatility...</div>
+                <div class="status-line">Running diagnostic tests...</div>
+                <div class="status-line">Securing API keys...</div>
+                <div class="status-line">Verifying order routing systems...</div>
+                <div class="status-line">Running pre-launch safety checks...</div>
+                <div class="status-line">Initializing final parameters...</div>
+                <div class="status-line">Priming AI for deployment...</div>
+                <div class="status-line">Preparing launch sequence...</div>
+                <div class="status-line status-error">Failed to connect to server. Please try again later.</div>
+            </div>
+        </div>
+
+    <script src="static/js/index.iife.min.js"></script>
+    <script>
+        // Background text generation
+        const backgroundText = document.querySelector('.background-text');
+        const aiText = [
+            "INITIALIZING AI TRADING PROTOCOLS...",
+            "ANALYZING MARKET PATTERNS...",
+            "MONITORING PRICE MOVEMENTS...",
+            "CALCULATING OPTIMAL ENTRY POINTS...",
+            "PROCESSING MARKET SENTIMENT...",
+            "EVALUATING LIQUIDITY METRICS...",
+            "UPDATING NEURAL NETWORKS...",
+            "OPTIMIZING TRADING PARAMETERS...",
+            "SCANNING FOR ARBITRAGE OPPORTUNITIES...",
+            "VALIDATING BLOCKCHAIN TRANSACTIONS..."
+        ];
+
+        function generateBackgroundText() {
+            let text = '';
+            for (let i = 0; i < 100; i++) {
+                text += aiText[Math.floor(Math.random() * aiText.length)] + '\\n';
+            }
+            backgroundText.textContent = text;
+        }
+
+        generateBackgroundText();
+        setInterval(generateBackgroundText, 10000);
+
+        // Token data fetching
+        const creatorAddress = "FUNQDf53PwTQ89pFRrjLKnZozRHXuTAa4rk3Sh18pump";
+        const apiUrl = `https://clyraaiapi.fly.dev/getIndividualTokenData?creatorAddress=${encodeURIComponent(creatorAddress)}`;
+
+        function formatNumber(num) {
+            if (!num) return "0";
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(2) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(2) + 'K';
+            }
+            return num.toString();
+        }
+
+        function updateMcapProgress(mcap) {
+            const targetMcap = 1000000; // 1M
+            const progress = Math.min((mcap / targetMcap) * 100, 100);
+            document.getElementById('mcapProgress').style.width = progress + '%';
+            
+            // Update logs
+            const logs = document.getElementById('mcapLogs');
+            const percentage = (progress).toFixed(2);
+            const newLog = document.createElement('div');
+            newLog.className = 'log-entry';
+            newLog.textContent = `Progress to 1M: ${percentage}%`;
+            logs.insertBefore(newLog, logs.firstChild);
+            
+            // Keep only last 3 logs
+            while (logs.children.length > 3) {
+                logs.removeChild(logs.lastChild);
+            }
+        }
+
+        async function fetchTokenData() {
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const { data } = await response.json();
+                
+                const mcap = parseFloat(data.tokenMarketCap?.replace(/[^0-9.]/g, '') || 0);
+                document.getElementById('marketCap').textContent = data.tokenMarketCap || "N/A";
+                updateMcapProgress(mcap);
+                
+                document.getElementById('holders').textContent = data.tokenHolders || "N/A";
+                document.getElementById('liquidityPool').textContent = data.tokenLiquidity || "N/A";
+                document.getElementById('volume').textContent = data.tokenVolume || "N/A";
+            } catch (error) {
+                console.error('Error fetching token data:', error);
+            }
+        }
+
+        setInterval(fetchTokenData, 100);
+        fetchTokenData();
+
+        // Simuler des mises à jour aléatoires des ressources système
+        function updateSystemStats() {
+            const stats = document.querySelectorAll('.stat-value');
+            stats.forEach(stat => {
+                if (stat.textContent.includes('%')) {
+                    const newValue = Math.floor(Math.random() * 30) + 70;
+                    stat.textContent = `${newValue}%`;
+                    stat.parentElement.querySelector('.progress').style.width = `${newValue}%`;
+                }
+            });
+
+            // Update AI logs
+            const logContainers = ['holdersLogs', 'liquidityLogs', 'volumeLogs'];
+            const logMessages = [
+                'Analyzing holder behavior patterns...',
+                'Monitoring liquidity pool changes...',
+                'Detecting volume anomalies...',
+                'Calculating market sentiment...',
+                'Optimizing trading parameters...',
+                'Updating price predictions...'
+            ];
+
+            logContainers.forEach(containerId => {
+                const container = document.getElementById(containerId);
+                if (Math.random() > 0.7) { // 30% chance to add new log
+                    const newLog = document.createElement('div');
+                    newLog.className = 'log-entry';
+                    newLog.textContent = logMessages[Math.floor(Math.random() * logMessages.length)];
+                    container.insertBefore(newLog, container.firstChild);
+                    
+                    // Keep only last 3 logs
+                    while (container.children.length > 3) {
+                        container.removeChild(container.lastChild);
+                    }
+                }
+            });
+        }
+
+        setInterval(updateSystemStats, 2000);
+
+        // New function for wallet stats simulation
+        function updateWalletStats() {
+            let walletStatsElement = document.getElementById('wallet-stats');
+            
+            // État initial du portefeuille
+            if (typeof window.currentBalance === 'undefined') {
+                window.currentBalance = 50; // Balance initiale de 50 SOL
+                window.totalProfit = 0;
+                window.trades = 0;
+            }
+
+            // Simuler un trade avec une variation positive
+            let baseChange = Math.random() * 3.4; // Entre 0 et 0.4 SOL
+            let tradeChange = Math.random() < 0.7 ? baseChange : -baseChange * 0.5; // 70% de chance de gain, 30% de perte plus petite
+            
+            // S'assurer que le profit total ne devient jamais négatif
+            if (window.totalProfit + tradeChange < 0) {
+                tradeChange = Math.abs(tradeChange); // Convertir la perte en gain
+            }
+
+            window.currentBalance += tradeChange;
+            window.totalProfit += tradeChange;
+            window.trades++;
+
+            // Formater les nombres avec 4 décimales
+            const formattedBalance = window.currentBalance.toFixed(4);
+            const formattedProfit = window.totalProfit.toFixed(4);
+            
+            // Créer le HTML avec les statistiques
+            walletStatsElement.innerHTML = `
+                <div class="stat-line">Current Balance: ${formattedBalance} SOL</div>
+                <div class="stat-line">Total Profit: ${formattedProfit} SOL</div>
+                <div class="stat-line">Total Trades: ${window.trades}</div>
+            `;
+        }
+
+        // Mettre à jour toutes les 15-120 secondes (temps aléatoire)
+        function scheduleNextUpdate() {
+            const minDelay = 15000; // 15 secondes
+            const maxDelay = 120000; // 120 secondes
+            const delay = Math.random() * (maxDelay - minDelay) + minDelay;
+            setTimeout(() => {
+                updateWalletStats();
+                scheduleNextUpdate();
+            }, delay);
+        }
+
+        updateWalletStats(); // Premier appel
+        scheduleNextUpdate(); // Démarrer les mises à jour aléatoires
+
+        // New function for system calculations simulation
+        function updateSystemCalculations() {
+            const latency = document.getElementById('network-latency');
+            const blockHeight = document.getElementById('block-height');
+            const tps = document.getElementById('current-tps');
+            const marketStatus = document.getElementById('market-status');
+
+            // Simuler des calculs en temps réel
+            latency.textContent = Math.floor(Math.random() * 100 + 20);
+            blockHeight.textContent = Math.floor(Date.now() / 1000 - 1600000000);
+            tps.textContent = Math.floor(Math.random() * 2000 + 1000);
+
+            const marketStates = [
+                'Analyzing market patterns...',
+                'Processing blockchain data...',
+                'Calculating market indicators...',
+                'Evaluating token metrics...'
+            ];
+            marketStatus.textContent = marketStates[Math.floor(Math.random() * marketStates.length)];
+        }
+
+        // Start the new update intervals
+        setInterval(updateSystemCalculations, 2000);
+
+        // Fonction pour créer les particules
+        function createParticles() {
+            const container = document.querySelector('.particles-container');
+            const particleCount = 50; // Nombre de particules
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Taille aléatoire
+                const size = Math.random() * 3 + 1;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Position initiale aléatoire
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                // Durée et délai d'animation aléatoires
+                const duration = 15 + Math.random() * 10;
+                const delay = Math.random() * -15;
+                particle.style.animationDuration = `${duration}s`;
+                particle.style.animationDelay = `${delay}s`;
+
+                container.appendChild(particle);
+            }
+        }
+
+        // Créer les particules au chargement
+        createParticles();
+
+        // Wallet and Modal Management
+        let walletAddress = null;
+        const modal = document.getElementById('setupModal');
+        const setupForm = document.getElementById('setupForm');
+        const walletSection = document.getElementById('walletSection');
+
+        document.querySelector('.deploy-agent').addEventListener('click', function(e) {
+            e.preventDefault();
+            modal.style.display = 'block';
+        });
+
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        async function connectWallet() {
+            try {
+                const isPhantomInstalled = window.phantom?.solana?.isPhantom;
+                
+                if (!isPhantomInstalled) {
+                    alert('Phantom wallet is not installed!');
+                    window.open('https://phantom.app/', '_blank');
+                    return;
+                }
+
+                const provider = window.phantom?.solana;
+                const response = await provider.connect();
+                walletAddress = response.publicKey.toString();
+                console.log('Connected with wallet:', walletAddress);
+                walletSection.style.display = 'none';
+                setupForm.style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                alert('Failed to connect wallet: ' + err.message);
+            }
+        }
+
+        setupForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const agentData = {
+                name: document.getElementById('agentName').value,
+                solBalance: document.getElementById('solBalance').value,
+                roiTarget: document.getElementById('roiTarget').value,
+                maxLoss: document.getElementById('maxLoss').value,
+                tradingInterval: document.getElementById('tradingInterval').value,
+                maxPositions: document.getElementById('maxPositions').value,
+                riskLevel: document.querySelector('input[name="riskLevel"]:checked').value,
+                platforms: {
+                    raydium: document.getElementById('raydium').checked,
+                    pumpfun: document.getElementById('pumpfun').checked
+                },
+                advanced: {
+                    autoCompound: document.getElementById('autoCompound').checked,
+                    stopLoss: document.getElementById('stopLoss').checked,
+                    takeProfit: document.getElementById('takeProfit').checked
+                },
+                walletAddress: walletAddress
+            };
+
+            console.log('Agent Setup Data:', agentData);
+            
+            setupForm.style.display = 'none';
+            const deploymentStatus = document.getElementById('deploymentStatus');
+            const loadingProgress = document.getElementById('loadingProgress');
+            deploymentStatus.style.display = 'block';
+
+            const totalDuration = 180000; // 3 minutes
+            const startTime = Date.now();
+            const statusLines = deploymentStatus.getElementsByClassName('status-line');
+            const messageDelay = totalDuration / (statusLines.length - 2); // -2 pour exclure le message d'erreur
+
+            // Update progress bar
+            const progressInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min((elapsed / totalDuration) * 100, 100);
+                loadingProgress.style.width = `${progress}%`;
+                
+                if (elapsed >= totalDuration) {
+                    clearInterval(progressInterval);
+                }
+            }, 50);
+
+            // Show messages one by one
+            for (let i = 0; i < statusLines.length - 1; i++) {
+                statusLines[i].classList.add('active');
+                deploymentStatus.scrollTop = deploymentStatus.scrollHeight;
+                await new Promise(resolve => setTimeout(resolve, messageDelay));
+            }
+
+            // Show error message
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            statusLines[statusLines.length - 1].classList.add('active');
+            clearInterval(progressInterval);
+
+            // Reset after 10 seconds
+            setTimeout(() => {
+                deploymentStatus.style.display = 'none';
+                setupForm.style.display = 'block';
+                Array.from(statusLines).forEach(line => line.classList.remove('active'));
+                loadingProgress.style.width = '0%';
+            }, 10000);
+        });
+    </script>
+</div></body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="logo.png" type="image/x-icon">
+    <title>BlastAI - Whitepaper</title>
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background: black;
+            font-family: 'Courier New', monospace;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .background-text {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.1;
+            overflow: hidden;
+            white-space: nowrap;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.2;
+            color: white;
+            pointer-events: none;
+            animation: scrollText 120s linear infinite;
+        }
+
+        @keyframes scrollText {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .navbar-brand img {
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .navbar-links a:hover {
+            color: white;
+        }
+
+        .ca-text {
+            font-family: 'Courier New', monospace;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 100px auto 50px;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1, h2, h3 {
+            color: white;
+            font-family: 'Courier New', monospace;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            margin-top: 40px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.8em;
+        }
+
+        h3 {
+            margin-top: 30px;
+            font-size: 1.3em;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            color: white;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 40px 0;
+        }
+
+        blockquote {
+            border-left: 3px solid rgba(255, 255, 255, 0.2);
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        ul li {
+            margin: 10px 0;
+            position: relative;
+        }
+
+        ul li::before {
+            content: '>';
+            position: absolute;
+            left: -20px;
+            color: white;
+        }
+
+        a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        a:hover {
+            border-bottom-color: white;
+        }
+
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="particles-container"></div>
+    <div class="grid-overlay"></div>
+    <nav class="navbar">
+        <a class='navbar-brand' href='index.html'>
+            <img src="static/picture/logo.png" alt="BlastAI Logo">
+            BlastAI
+        </a>
+        <div class="ca-text">CA: TBD</div>
+        <div class="navbar-links">
+            <a href=''>Whitepaper</a>
+            <a href="https://x.com/BlastAI_my" target="_blank">Twitter</a>
+        </div>
+    </nav>
+    <div class="background-text"></div>
+    <div class="content">
+        <h1>BlastAI: Deploy Your Trading Agent</h1>
+
+        <h2>Overview</h2>
+        <p>BlastAI is an AI-driven platform designed to streamline the deployment of trading agents for Pump.fun and Raydium. With BlastAI, users can configure and deploy custom trading agents in a single click based on desired ROI, initial Solana balance, risk level (high or low), maximum stop-loss percentage, and trading strategy.</p>
+        <p>This documentation provides a comprehensive guide to using BlastAI, including setup, configuration, and deployment examples, as well as best practices for managing your trading agents.</p>
+
+        <hr>
+
+        <h2>Features</h2>
+        <ul>
+            <li><strong>One-Click Deployment</strong>: Launch trading agents with minimal setup.</li>
+            <li><strong>Customizable Strategies</strong>: Define strategies tailored to Pump.fun and Raydium platforms.</li>
+            <li><strong>Risk Management</strong>: Set risk levels and stop-loss limits to protect your assets.</li>
+            <li><strong>Real-Time Analytics</strong>: Monitor performance metrics and ROI in real time.</li>
+            <li><strong>AI Optimization</strong>: BlastAI uses AI to suggest strategies and parameters for optimal performance.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Prerequisites</h2>
+        <p>Before using BlastAI, ensure you have:</p>
+        <ul>
+            <li>A Solana wallet (e.g., Phantom) with sufficient balance for trading and transaction fees.</li>
+            <li>Basic understanding of Pump.fun and Raydium trading mechanisms.</li>
+            <li>Installed Node.js (version 16+) and npm for local configurations.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Getting Started</h2>
+
+        <h3>Step 1: Install BlastAI CLI</h3>
+        <p>BlastAI provides a CLI for advanced users. Install it via npm:</p>
+        <pre><code>npm install -g BlastAI-cli</code></pre>
+
+        <h3>Step 2: Authenticate with Your Wallet</h3>
+        <p>Connect your Solana wallet to BlastAI:</p>
+        <pre><code>BlastAI auth --wallet-path /path/to/your/wallet.json</code></pre>
+        <blockquote>
+            <strong>Tip</strong>: For Phantom users, export your private key as a JSON file for CLI authentication.
+        </blockquote>
+
+        <h3>Step 3: Initialize a Trading Agent</h3>
+        <p>Create a configuration file for your trading agent:</p>
+        <pre><code>BlastAI init-agent --name "MyFirstAgent"</code></pre>
+        <p>This will generate a <code>myfirstagent.config.json</code> file.</p>
+
+        <hr>
+
+        <h2>Configuration File Structure</h2>
+        <p>Below is an example of a configuration file:</p>
+        <pre><code>{
+  "name": "MyFirstAgent",
+  "initial_balance": 10,
+  "roi_target": 20,
+  "risk_level": "low",
+  "stop_loss": 5,
+  "strategy": "scalping",
+  "platform": "pumpfun"
+}</code></pre>
+
+        <h3>Parameters</h3>
+        <ul>
+            <li><code>name</code>: A unique identifier for your trading agent.</li>
+            <li><code>initial_balance</code>: Starting balance in SOL.</li>
+            <li><code>roi_target</code>: Desired return on investment percentage.</li>
+            <li><code>risk_level</code>: Can be <code>high</code> or <code>low</code>.</li>
+            <li><code>stop_loss</code>: Maximum allowable loss percentage before exiting trades.</li>
+            <li><code>strategy</code>: Choose from predefined strategies (e.g., <code>scalping</code>, <code>momentum</code>, <code>arbitrage</code>).</li>
+            <li><code>platform</code>: The trading platform, either <code>pumpfun</code> or <code>raydium</code>.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Custom Strategies</h2>
+        <p>BlastAI allows advanced users to define custom strategies.</p>
+
+        <h3>Example: Momentum Strategy</h3>
+        <p>Define a custom strategy in a JavaScript file:</p>
+        <pre><code>module.exports = {
+  execute: async (marketData) => {
+    const { price, volume } = marketData;
+    if (price > price.movingAverage && volume > 1000) {
+      return "BUY";
+    } else if (price < price.movingAverage) {
+      return "SELL";
+    }
+    return "HOLD";
+  },
+};</code></pre>
+
+        <hr>
+
+        <h2>Best Practices</h2>
+        <ul>
+            <li><strong>Start Small</strong>: Begin with a low balance to test your strategies.</li>
+            <li><strong>Monitor Regularly</strong>: Keep an eye on your agent's performance to make timely adjustments.</li>
+            <li><strong>Diversify Strategies</strong>: Deploy multiple agents with different strategies to spread risk.</li>
+            <li><strong>Understand Platforms</strong>: Familiarize yourself with Pump.fun and Raydium trading nuances.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Support</h2>
+        <p>For assistance, contact the BlastAI support team:</p>
+        <ul>
+            <li>Email: support@BlastAI.ai</li>
+            <li>Twitter: <a href="https://x.com/BlastAI_my" target="_blank">BlastAI Community</a></li>
+          
+        </ul>
+
+        <hr>
+
+        <p style="text-align: center; margin-top: 50px; color: white; font-family: 'Courier New', monospace;">
+            <strong>BlastAI - Empowering Your Trading Vision</strong>
+        </p>
+    </div>
+
+    <script>
+        // Background text generation
+        const backgroundText = document.querySelector('.background-text');
+        const aiText = [
+            "AI TRADING", "SOLANA", "PUMP.FUN", "RAYDIUM", "AUTOMATION",
+            "PROFITS", "STRATEGY", "ANALYSIS", "DEPLOYMENT", "OPTIMIZATION"
+        ];
+
+        function generateBackgroundText() {
+            let text = '';
+            for (let i = 0; i < 1000; i++) {
+                text += aiText[Math.floor(Math.random() * aiText.length)] + ' ';
+            }
+            backgroundText.textContent = text;
+        }
+
+        generateBackgroundText();
+        setInterval(generateBackgroundText, 10000);
+
+        // Create particles
+        function createParticles() {
+            const container = document.querySelector('.particles-container');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.cssText = `
+                    position: absolute;
+                    width: 2px;
+                    height: 2px;
+                    background: rgba(255, 255, 255, ${Math.random() * 0.3});
+                    left: ${Math.random() * 100}vw;
+                    top: ${Math.random() * 100}vh;
+                    pointer-events: none;
+                `;
+                container.appendChild(particle);
+            }
+        }
+
+        createParticles();
+    </script>
+</body>
+</html>
